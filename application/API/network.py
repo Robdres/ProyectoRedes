@@ -36,4 +36,3 @@ get_hosts(get_ipsubmask()[1].decode())
 
 
 
-
