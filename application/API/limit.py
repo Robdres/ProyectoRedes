@@ -13,12 +13,12 @@ dic = {
     }
 
 class Limiter():
-    def __init__(self,id,direction,limit):
+    def __init__(self,id,limit):
         self.id = id
-        if(direction == "up"):
-            self.direction = '--upload'
-        else:
-            self.direction = '--download'
+        # if(direction == "up"):
+        #     self.direction = '--upload'
+        # else:
+        #     self.direction = '--download'
             
         self.limit=str(limit[0]) + dic[limit[1]]
         self.thread = Thread(target=self.setup,args="")
@@ -32,12 +32,11 @@ class Limiter():
         self.p.expect(['Main() >>> '])
         self.stop()
 
-
     def stop(self):
         self.p.interact()
         self.p.sendline('exit')
 
-limite_101 = Limiter(2,'up',[100,'MB'])
+limite_101 = Limiter(2,[100,'MB'])
 
 limite_101.thread.run()
 

@@ -33,4 +33,5 @@ class Blocker():
 limite_101 = Blocker(2)
 
 limite_101.thread.run()
+limite_101.stop()
 
