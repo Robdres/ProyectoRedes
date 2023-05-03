@@ -1,6 +1,7 @@
 import subprocess 
 import nmap 
 import re
+import pandas as pd
 #import arpSpoof as spoof
 
 class Network():
@@ -37,7 +38,6 @@ class Network():
                 if(aux):
                     continue
                 holder.append(i)
-        print(holder)
         return holder
 
 
@@ -51,10 +51,17 @@ class Network():
 
         # Get a list of all hosts on the network
         hosts = nm.all_hosts()
-        
+        data = self.get_hosts_limits()
         for i in hosts:
             host = []
-            host.append(nm[i]['addresses']['ipv4'].split('.')[-1])
+            l = data[data.iloc[:,1]==bytes(nm[i]['addresses']['ipv4'],'utf-8')]
+
+            if(len(l)==0):
+                continue
+
+            host.append(l.iloc[:,0].to_numpy()[0])
+            host.append(nm[i]['addresses']['ipv4'])
+
             if('mac' in (nm[i]['addresses'])):
                 host.append(nm[i]['addresses']['mac'])
             else:
@@ -96,8 +103,8 @@ class Network():
                         aux.append(k[3:].strip())
                 if len(aux) != 0:
                     data_1.append(aux)
-        return data_1
-
-
+        return pd.DataFrame(data_1[1:])
+                                           
 model = Network()
-print(model.get_os(b"192.168.68.109"))
+                                           
+print(model.get_hosts())

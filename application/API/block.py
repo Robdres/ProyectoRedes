@@ -12,15 +12,9 @@ dic = {
         'GB':'gbit',
     }
 
-class Limiter():
-    def __init__(self,id,direction,limit):
+class Blocker():
+    def __init__(self,id):
         self.id = id
-        if(direction == "up"):
-            self.direction = '--upload'
-        else:
-            self.direction = '--download'
-            
-        self.limit=str(limit[0]) + dic[limit[1]]
         self.thread = Thread(target=self.setup,args="")
         self.p = pexp.spawn("evillimiter --flush")
 
@@ -28,16 +22,15 @@ class Limiter():
         self.p.timeout = 3600
         self.p.sendline("scan")
         self.p.sendline("hosts")
-        self.p.sendline("limit " + str(self.id) +" " +self.limit)
+        self.p.sendline("block " + str(self.id))
         self.p.expect(['Main() >>> '])
-        self.stop()
 
 
     def stop(self):
-        self.p.interact()
         self.p.sendline('exit')
+        self.p.close()
 
-limite_101 = Limiter(2,'up',[100,'MB'])
+limite_101 = Blocker(2)
 
 limite_101.thread.run()
 
