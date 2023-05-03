@@ -7,10 +7,6 @@ import struct
 import random
 import string
 from functools import partial
-import dns.resolver
-from dnslib.server import DNSServer, DNSLogger, DNSRecord
-
-
 
 
 
@@ -49,10 +45,25 @@ def create_buttons(container, item_data, output_label):
         button = customtkinter.CTkButton(container, text=text, command=action)
         button.grid(row=1, column=i, padx=5, pady=5)
 
+def slider_value(value):
+        print("con el value: ", value)
 
+        return value
+
+def label_value(container, value):
+    #value = slider_value
+    print("Este es el value -> ", value)
+    labelSlider = customtkinter.CTkLabel(container, text=value)
+    labelSlider.grid(row=4, column=0, padx=10, pady=10, sticky="w")
+
+    
 # Function to create item container
 def create_item_container(parent, data, output_label):
     for i, item_id in enumerate(data):
+        #create slider
+        
+        #slider.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        
         item_data = data[item_id]  # Get the item data using the item_id
         item_container = customtkinter.CTkFrame(parent, width=300, height=100, corner_radius=10)
         item_container.grid(row=i, column=0, padx=10, pady=(0, 20), sticky="nsew")
@@ -63,17 +74,44 @@ def create_item_container(parent, data, output_label):
 
         button_container = customtkinter.CTkFrame(item_container, width=300, height=40, corner_radius=10)
         button_container.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew")
+        
 
         button_definitions = [
-            ("ID", partial(output_label.configure, text=f"ID: {item_data[0]}")),
-            ("Name", partial(output_label.configure, text=f"Name: {item_data[1]}")),
-            ("MAC", partial(output_label.configure, text=f"MAC: {item_data[2]}")),
-            ("Status", partial(output_label.configure, text=f"Status: {item_data[3]}")),
+            ("Limit", partial(output_label.configure, text=f"ID: {item_data[0]}")),
+            ("Block", partial(output_label.configure, text=f"Name: {item_data[1]}")),
+            ("Info", partial(output_label.configure, text=f"Status: {item_data[3]}")),
         ]
 
         for j, (button_text, button_command) in enumerate(button_definitions):
             button = customtkinter.CTkButton(button_container, text=button_text, command=button_command)
             button.grid(row=0, column=j, padx=(0, 10), pady=(0, 10), sticky="nsew")
+            #Slider en cada item
+            slider = customtkinter.CTkSlider(button_container, from_=0, to=100, number_of_steps=10, command=slider_value)
+            slider.grid(row=3, column=0, padx=(2, 10), pady=(10, 10), sticky="ew")
+            #Label para el value del slider
+            value = slider.get()
+            label_value(button_container,value)
+            
+            #Radios Buttons
+            #radio_var = tkinter.IntVar(value=0)
+            radio_var = tkinter.StringVar(value="")
+            radio_button_bit = customtkinter.CTkRadioButton(button_container,text="bit" ,variable=radio_var, value="bit")
+            radio_button_bit.grid(row=5, column=0, pady=10, padx=20, sticky="n")
+            
+            radio_button_kbit = customtkinter.CTkRadioButton(button_container,text="kbit" ,variable=radio_var, value="kbit")
+            radio_button_kbit.grid(row=6, column=0, pady=10, padx=20, sticky="n")
+            
+            radio_button_mbit = customtkinter.CTkRadioButton(button_container,text="mbit" ,variable=radio_var, value="mbit")
+            radio_button_mbit.grid(row=7, column=0, pady=10, padx=20, sticky="n")
+            
+            radio_button_gbit = customtkinter.CTkRadioButton(button_container,text="gbit" ,variable=radio_var, value="gbit")
+            radio_button_gbit.grid(row=8, column=0, pady=10, padx=20, sticky="n")
+            
+            print("radiobutton toggled, current value:", radio_var.get())
+            
+            
+       
+            
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -99,7 +137,7 @@ class App(customtkinter.CTk):
         self.entry = customtkinter.CTkEntry(self.sidebar_frame,placeholder_text="Limitar acceso a un sitio en especifico")
         self.entry.grid(row=1, column=0, columnspan=2, padx=(5, 0), pady=(5, 5), sticky="nsew")
         
-        self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, text="Limitar Acceso",command=self.limit_domain)
+        self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, text="Limitar Acceso",command=self.sidebar_button_event)
         self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
         #self.sidebar_button_3 = customtkinter.CTkButton(self.sidebar_frame, command=self.sidebar_button_event)
         #self.sidebar_button_3.grid(row=3, column=0, padx=20, pady=10)
@@ -146,12 +184,7 @@ class App(customtkinter.CTk):
 
     def sidebar_button_event(self):
         print("sidebar_button click")
-        
-   
- 
-
-        
-
+    
 
 if __name__ == "__main__":
     app = App()
