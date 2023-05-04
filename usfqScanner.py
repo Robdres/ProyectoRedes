@@ -214,7 +214,7 @@ class App(customtkinter.CTk):
 
         self.sidebar_button_2 = customtkinter.CTkButton(
 
-            self.sidebar_frame, text="Limitar Acceso", command= lambda: self.sidebar_button_event(self.entry.get()))
+            self.sidebar_frame, text="Limitar Acceso", command= self.sidebar_button_event)
 
         self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
         # self.sidebar_button_3 = customtkinter.CTkButton(self.sidebar_frame, command=self.sidebar_button_event)
