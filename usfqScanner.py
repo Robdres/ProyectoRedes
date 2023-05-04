@@ -149,7 +149,7 @@ class App(customtkinter.CTk):
                         padx=(5, 0), pady=(5, 5), sticky="nsew")
 
         self.sidebar_button_2 = customtkinter.CTkButton(
-            self.sidebar_frame, text="Limitar Acceso", command=self.sidebar_button_event)
+            self.sidebar_frame, text="Limitar Acceso", command= lambda: self.sidebar_button_event(self.entry.get()))
         self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
         # self.sidebar_button_3 = customtkinter.CTkButton(self.sidebar_frame, command=self.sidebar_button_event)
         # self.sidebar_button_3.grid(row=3, column=0, padx=20, pady=10)
@@ -201,7 +201,7 @@ class App(customtkinter.CTk):
 
         # Free button
         self.button_free = customtkinter.CTkButton(
-            self.sidebar_frame, text="Free")
+            self.sidebar_frame, text="Free", command=self.sidebar_button_unblock)
         self.button_free.grid(row=5, column=0, padx=20, pady=10)
 
         # TextBox Domain List
@@ -229,7 +229,15 @@ class App(customtkinter.CTk):
         new_scaling_float = int(new_scaling.replace("%", "")) / 100
         customtkinter.set_widget_scaling(new_scaling_float)
 
-    def sidebar_button_event(self):
+    def sidebar_button_event(self, site):
+        cmd = 'sudo python3 blocker.py block '+site
+        os.system(cmd)
+        print(site)
+        print("sidebar_button click")
+        
+    def sidebar_button_unblock(self):
+        cmd = 'sudo python3 blocker.py unblock-all d'
+        os.system(cmd)
         print("sidebar_button click")
 
    # RADIO BUTTON
@@ -242,8 +250,12 @@ class App(customtkinter.CTk):
 
     #Blocked Domains
     def action_showButton(self):
-        self.textbox.insert("0.0", "List Blocked Domains\n\n" +
-                            "Obtener nombres de los dominios bloqueados\n\n")
+    	self.textbox.delete('0.0', END)
+    	return_blocked = subprocess.run('sudo python3 blocker.py get-all d', shell=True, capture_output=True, text=True)
+
+    	for site in return_blocked.stdout.replace('[','').replace(']','').replace('\'','').replace(' ','').split(','):
+    	    print(site)
+    	    self.textbox.insert("0.0", site + "\n")
 
 if __name__ == "__main__":
     app = App()
