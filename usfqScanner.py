@@ -1,4 +1,5 @@
 import tkinter
+import time
 import tkinter.messagebox
 import customtkinter
 import subprocess
@@ -8,6 +9,16 @@ import random
 import string
 import blocker
 from functools import partial
+
+import application.API.network as net
+import application.API.limit as lim
+import application.API.blocker as blk
+
+network = net.Network()
+data = {}
+limiters = {}
+blockers = {}
+
 
 customtkinter.set_appearance_mode("dark")
 # customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
@@ -29,23 +40,65 @@ def generate_data(n=10):
         data[_id] = (_id, name, mac_address, status)
     return data
 
-def slider_value(value, labelSlider, limit):
-    labelSlider.configure(text=value)
-    limit.set(value) #Modifica el valor de la variable global limitGlob -James.
 
+def slider_value(value, labelSlider, limit): 
+    labelSlider.configure(text=value)
+
+    limit.set(value) #Modifica el valor de la variable global limitGlob -James.
 '''
     Función modificada para manejar dos valores importantes para limitar: limit_value (el entero) y radio_value (descriptor—bit, mbit, etc)
     Se usa para imprimir en el output_label el valor a limitar y debe usarse para enviar los valores a la función limit
     -James
 '''
-def limit_bandwidth(output_label, limit_var, radio_frame):
+
+def limit_bandwidth(output_label, limit_var, radio_frame,id,progressbar): 
     def command():
+
         limit_value = limit_var.get()
         radio_value = radio_frame.get_checked_item()
-        output_label.configure(text=f"Limit to: {limit_value} {radio_value}")
+        output_label.configure(text=f"limit to: {limit_value} {radio_value} // This might take a while to work")
+        limiters[id].setup_limit([limit_value,radio_value])
+        limiters[id].start()
+
+        progressbar.set(0)
+        progress_step = 0
+        for _ in range(100000):
+            progressbar.set(progress_step)
+            progress_step+=0.00001
     return command
 
-def create_item_container(parent, data, output_label, limit, scrollable_radiobutton_frame): #Argumentos limit y scrollable_radiobutton_frame agregados para manejo de valores para limit -James
+def unlimit_bandwidth(output_label, limit_var, radio_frame,id,progressbar): 
+    def command():
+        limit_value = limit_var.get()
+        limiters[id].stop()
+        output_label.configure(text=f"Unlimited {id}")
+        
+    return command
+
+def block(output_label,id,progressbar): 
+    def command():
+        output_label.configure(text=f"Blocked: //This might take a while to work {id}")
+        blockers[id].start()
+    return command
+
+def unblock(output_label,id,progressbar): 
+    def command():
+        output_label.configure(text=f"UnBlocked: {id}")
+        blockers[id].stop()
+    return command
+
+def get_os(output_label,ip,progressbar): 
+    def command():
+        ips = network.get_ip()
+        if(ip in ips):
+            output_label.configure(text=f"Own computer")
+        else:
+            aux = network.get_os(ip)
+            output_label.configure(text=f"OS: {aux[0][0]}, Accurracy: {aux[0][1]}")
+    return command
+
+
+def create_item_container(parent, data, output_label, limit, scrollable_radiobutton_frame,progressbar): #Argumentos limit y scrollable_radiobutton_frame agregados para manejo de valores para limit -James
     for i, item_id in enumerate(data):
         item_data = data[item_id]  # Get the item data using the item_id
         item_container = customtkinter.CTkFrame(
@@ -53,7 +106,7 @@ def create_item_container(parent, data, output_label, limit, scrollable_radiobut
         item_container.grid(row=i, column=0, padx=10,
                             pady=(0, 20), sticky="nsew")
 
-        label_text = f"{item_data[0]} {item_data[1]} {item_data[2]} {item_data[3]}"
+        label_text = f"ID:{item_data[0].decode()},  IP:{item_data[1]},    MAC:{item_data[2]},  status:{item_data[3]}"
         label = customtkinter.CTkLabel(item_container, text=label_text)
         label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
@@ -63,16 +116,21 @@ def create_item_container(parent, data, output_label, limit, scrollable_radiobut
                               pady=(0, 10), sticky="nsew")
 
         button_definitions = [
-            ("Limit Bandwidth", limit_bandwidth(output_label, limit, scrollable_radiobutton_frame)), #Command modificado para imprimir el valor a limitar en el label -James.
-            ("Block", partial(output_label.configure,
-             text=f"Name: {item_data[1]}")),
-            ("Info", partial(output_label.configure,
-             text=f"Status: {item_data[3]}")),
+
+            ("Limit Bandwidth", limit_bandwidth(output_label, limit, scrollable_radiobutton_frame,item_data[0].decode(),progressbar)),
+            ("Unlimit Bandwidth", unlimit_bandwidth(output_label, limit, scrollable_radiobutton_frame,item_data[0].decode(),progressbar)), #Command modificado para imprimir el valor a limitar en el label -James
+            ("Block", block(output_label, item_data[0].decode(),progressbar)),
+            ("UnBlock", unblock(output_label, item_data[0].decode(),progressbar)),
+            ("Info", get_os(output_label,item_data[1],progressbar)),
+
         ]
 
         for j, (button_text, button_command) in enumerate(button_definitions):
             button = customtkinter.CTkButton(
                 button_container, text=button_text, command=button_command)
+
+            button['state']=customtkinter.DISABLED
+
             button.grid(row=0, column=j, padx=(0, 10),
                         pady=(0, 10), sticky="nsew")
 
@@ -85,8 +143,10 @@ def create_item_container(parent, data, output_label, limit, scrollable_radiobut
             labelSlider.grid(row=4, column=0, padx=10, pady=10, sticky="w")
 
             # slider.configure(command=lambda value: slider_value(value, labelSlider)) /Previous Lambda not working for data requests -James.
+
             slider.configure(
                 command=lambda value, label=labelSlider: slider_value(value, label, limit))
+
 
 class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
     def __init__(self, master, item_list, command=None, **kwargs):
@@ -97,6 +157,10 @@ class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
         self.radiobutton_list = []
         for i, item in enumerate(item_list):
             self.add_item(item)
+
+        #default value
+        self.radiobutton_list[1].select()
+
 
     def add_item(self, item):
         radiobutton = customtkinter.CTkRadioButton(
@@ -123,7 +187,6 @@ class App(customtkinter.CTk):
         super().__init__()
 
         limitGlob = tkinter.IntVar(value=0) #Variable global para almacenar el valor a limitar que se modifica en la función slider_value() -James.
-        #print(limitGlob.get())
 
         # configure window
         self.title("USFQ Red Scanner")
@@ -142,7 +205,7 @@ class App(customtkinter.CTk):
         self.logo_label = customtkinter.CTkLabel(
             self.sidebar_frame, text="USFQ Scanner", font=customtkinter.CTkFont(size=20, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
-    # Entrada para limitar acceso a sitios web
+
 
         self.entry = customtkinter.CTkEntry(
             self.sidebar_frame, placeholder_text="Limitar acceso a un sitio en especifico")
@@ -150,7 +213,9 @@ class App(customtkinter.CTk):
                         padx=(5, 0), pady=(5, 5), sticky="nsew")
 
         self.sidebar_button_2 = customtkinter.CTkButton(
-            self.sidebar_frame, text="Block Domain", command=self.sidebar_button_event)
+
+            self.sidebar_frame, text="Limitar Acceso", command= lambda: self.sidebar_button_event(self.entry.get()))
+
         self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
         # self.sidebar_button_3 = customtkinter.CTkButton(self.sidebar_frame, command=self.sidebar_button_event)
         # self.sidebar_button_3.grid(row=3, column=0, padx=20, pady=10)
@@ -185,12 +250,17 @@ class App(customtkinter.CTk):
             0, 0), pady=(0, 0), sticky="nsew")
         self.scrollable_frame.grid_columnconfigure(0, weight=10)
 
+        self.progressbar = customtkinter.CTkProgressBar(master=self)
+        self.progressbar.grid(row=2, column=1, padx=10, pady=10, sticky="w")
+        self.progressbar.set(0)
         # RADIO BUTTON FRAME
-        self.scrollable_radiobutton_frame = ScrollableRadiobuttonFrame(master=self, width=500, command=None,
+        self.scrollable_radiobutton_frame = ScrollableRadiobuttonFrame(master=self, width=500, command=None, 
+
             # command=partial(self.radiobutton_frame_event, limitGlob) /Alternativa para imprimir datos de seguimiento (test) en el terminal -James.
                                                                         item_list=[
                                                                             "bit", "kbit", "mbit", "gbit"],
                                                                         label_text="Arguments for limiting")
+
         self.scrollable_radiobutton_frame.grid(
             row=1, column=3, padx=5, pady=5, sticky="ns")
         self.scrollable_radiobutton_frame.configure(width=200)
@@ -202,7 +272,9 @@ class App(customtkinter.CTk):
 
         # Free button
         self.button_free = customtkinter.CTkButton(
+
             self.sidebar_frame, text="Unlock All",command=self.action_unblockBUtton)
+
         self.button_free.grid(row=5, column=0, padx=20, pady=10)
 
         # TextBox Domain List
@@ -211,12 +283,21 @@ class App(customtkinter.CTk):
             20, 0), pady=(20, 0), sticky="nsew")
 
         # Generate random data
-        data = generate_data(10)
+        #data = generate_data(10)
+        self.progressbar.set(0)
+        data_aux = network.get_hosts()
+        self.progressbar.start()
+        for i,j in enumerate(data_aux):
+            data[j[0].decode()] = j
+            limiters[j[0].decode()]= lim.Limiter(j[0].decode())
+            blockers[j[0].decode()]= blk.Blocker(j[0].decode())
 
         # Display data in the scrollable frame
         create_item_container(self.scrollable_frame, data,
                               self.output_label, limitGlob,
-                              self.scrollable_radiobutton_frame)
+
+                              self.scrollable_radiobutton_frame,self.progressbar)
+        self.progressbar.stop()
 
     def open_input_dialog_event(self):
         dialog = customtkinter.CTkInputDialog(
@@ -247,6 +328,7 @@ class App(customtkinter.CTk):
 
     #Blocked Domains
     def action_showButton(self):
+
         print("Action Button")
 
         #site_b = blocker.block_site("www.youtube.com")
