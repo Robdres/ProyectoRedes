@@ -5,6 +5,21 @@ import pandas as pd
 #import arpSpoof as spoof
 
 class Network():
+    def get_ip(self):
+        ip_submasks = []
+        data = subprocess.check_output(['ifconfig'])
+        holder = []
+        for k in data.split(b'\n\n'):
+            aux1 = {}
+            for i in k.split(b'\n'):
+                #check mask
+                if(b'inet ' in i):
+                    for j in i.split(b' '):
+                        if re.match(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', j.decode()) and not j.startswith(b'255'):
+                            holder.append(j.decode())
+
+        return holder
+
     def get_ipsubmask(self):
         ip_submasks = []
         data = subprocess.check_output(['ifconfig'])
@@ -73,7 +88,7 @@ class Network():
     #Function ot get information
     def get_os(self, ipv4):
         nm = nmap.PortScanner()
-        nm.scan(hosts = ipv4.decode(),arguments="-O")
+        nm.scan(hosts = ipv4,arguments="-O")
         hosts = nm.all_hosts()
         oss = []
         for i in hosts:
@@ -93,7 +108,7 @@ class Network():
         return ip
 
     def get_hosts_limits(self):
-        data = subprocess.check_output(['sh','./get_host.sh'])
+        data = subprocess.check_output(['sh','./application/API/get_host.sh'])
         data_1 = []
         for i in data.split(b'(Main) >>> ')[-2:-1]:
             for j in i.split(b'\n')[2:-2]:
@@ -105,6 +120,3 @@ class Network():
                     data_1.append(aux)
         return pd.DataFrame(data_1[1:])
                                            
-model = Network()
-                                           
-print(model.get_hosts())

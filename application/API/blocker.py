@@ -2,19 +2,14 @@ import re
 import ctypes
 import time
 import subprocess
-
-from threading import Thread
 import multiprocessing
+from threading import Thread
 
 
-class Limiter():
+class Blocker():
     def __init__(self,id):
         self.id = id
         self.stop_event = multiprocessing.Event()
-            
-
-    def setup_limit(self,limit):
-        self.limit=str(limit[0]) + limit[1]
 
     def start(self):
         self.stop_event = multiprocessing.Event()
@@ -22,8 +17,7 @@ class Limiter():
         self.thread.run()
 
     def setup(self,event):
-        self.p = subprocess.Popen(['python3','application/API/limit_script.py',str(self.id),self.limit],stdout=subprocess.PIPE)
+        self.p = subprocess.Popen(['python3','./application/API/block_script.py',str(self.id)],stdout=subprocess.PIPE)
 
     def stop(self):
         self.stop_event.set()
-
