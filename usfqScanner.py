@@ -8,12 +8,9 @@ import random
 import string
 from functools import partial
 
-
-
 customtkinter.set_appearance_mode("dark")
 #customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
-
 
 # Function to generate a random MAC address
 def random_mac_address():
@@ -30,40 +27,11 @@ def generate_data(n=10):
         data[_id] = (_id, name, mac_address, status)
     return data
 
+def slider_value(value, labelSlider):
+    labelSlider.configure(text=value)
 
-# Function to create buttons and bind actions
-def create_buttons(container, item_data, output_label):
-    actions = [
-        ("ID", lambda data=item_data: output_label.config(text=f"ID: {data[0]}")),
-        ("Name", lambda data=item_data: output_label.config(text=f"Name: {data[1]}")),
-        ("MAC", lambda data=item_data: output_label.config(text=f"MAC: {data[2]}")),
-        ("Status", lambda data=item_data: output_label.config(text=f"Status: {data[3]}")),
-    ]
-    for i, (text, action) in enumerate(actions):
-        input_limiter = customtkinter.CTkInputDialog(container)
-        input_limiter.grid(row = 1,column = i, padx = 5, pady=5)
-        button = customtkinter.CTkButton(container, text=text, command=action)
-        button.grid(row=1, column=i, padx=5, pady=5)
-
-def slider_value(value):
-        print("con el value: ", value)
-
-        return value
-
-def label_value(container, value):
-    #value = slider_value
-    print("Este es el value -> ", value)
-    labelSlider = customtkinter.CTkLabel(container, text=value)
-    labelSlider.grid(row=4, column=0, padx=10, pady=10, sticky="w")
-
-    
-# Function to create item container
 def create_item_container(parent, data, output_label):
     for i, item_id in enumerate(data):
-        #create slider
-        
-        #slider.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
-        
         item_data = data[item_id]  # Get the item data using the item_id
         item_container = customtkinter.CTkFrame(parent, width=300, height=100, corner_radius=10)
         item_container.grid(row=i, column=0, padx=10, pady=(0, 20), sticky="nsew")
@@ -74,10 +42,9 @@ def create_item_container(parent, data, output_label):
 
         button_container = customtkinter.CTkFrame(item_container, width=300, height=40, corner_radius=10)
         button_container.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew")
-        
 
         button_definitions = [
-            ("Limit", partial(output_label.configure, text=f"ID: {item_data[0]}")),
+            ("Limit Bandwidth", partial(output_label.configure, text=f"ID: {item_data[0]}")),
             ("Block", partial(output_label.configure, text=f"Name: {item_data[1]}")),
             ("Info", partial(output_label.configure, text=f"Status: {item_data[3]}")),
         ]
@@ -85,34 +52,44 @@ def create_item_container(parent, data, output_label):
         for j, (button_text, button_command) in enumerate(button_definitions):
             button = customtkinter.CTkButton(button_container, text=button_text, command=button_command)
             button.grid(row=0, column=j, padx=(0, 10), pady=(0, 10), sticky="nsew")
-            #Slider en cada item
-            slider = customtkinter.CTkSlider(button_container, from_=0, to=100, number_of_steps=10, command=slider_value)
+            
+            slider = customtkinter.CTkSlider(button_container, from_=0, to=100, number_of_steps=10)
             slider.grid(row=3, column=0, padx=(2, 10), pady=(10, 10), sticky="ew")
-            #Label para el value del slider
-            value = slider.get()
-            label_value(button_container,value)
             
-            #Radios Buttons
-            #radio_var = tkinter.IntVar(value=0)
-            radio_var = tkinter.StringVar(value="")
-            radio_button_bit = customtkinter.CTkRadioButton(button_container,text="bit" ,variable=radio_var, value="bit")
-            radio_button_bit.grid(row=5, column=0, pady=10, padx=20, sticky="n")
+            labelSlider = customtkinter.CTkLabel(button_container, text="50")
+            labelSlider.grid(row=4, column=0, padx=10, pady=10, sticky="w")
             
-            radio_button_kbit = customtkinter.CTkRadioButton(button_container,text="kbit" ,variable=radio_var, value="kbit")
-            radio_button_kbit.grid(row=6, column=0, pady=10, padx=20, sticky="n")
-            
-            radio_button_mbit = customtkinter.CTkRadioButton(button_container,text="mbit" ,variable=radio_var, value="mbit")
-            radio_button_mbit.grid(row=7, column=0, pady=10, padx=20, sticky="n")
-            
-            radio_button_gbit = customtkinter.CTkRadioButton(button_container,text="gbit" ,variable=radio_var, value="gbit")
-            radio_button_gbit.grid(row=8, column=0, pady=10, padx=20, sticky="n")
-            
-            print("radiobutton toggled, current value:", radio_var.get())
-            
-            
-       
+            #slider.configure(command=lambda value: slider_value(value, labelSlider)) /Previous Lambda not working for data requests
+            slider.configure(command=lambda value, label=labelSlider: slider_value(value, label))
             
 
+class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
+    def __init__(self, master, item_list, command=None, **kwargs):
+        super().__init__(master, **kwargs)
+
+        self.command = command
+        self.radiobutton_variable = customtkinter.StringVar()
+        self.radiobutton_list = []
+        for i, item in enumerate(item_list):
+            self.add_item(item)
+
+    def add_item(self, item):
+        radiobutton = customtkinter.CTkRadioButton(self, text=item, value=item, variable=self.radiobutton_variable)
+        if self.command is not None:
+            radiobutton.configure(command=self.command)
+        radiobutton.grid(row=len(self.radiobutton_list), column=0, pady=(0, 10))
+        self.radiobutton_list.append(radiobutton)
+
+    def remove_item(self, item):
+        for radiobutton in self.radiobutton_list:
+            if item == radiobutton.cget("text"):
+                radiobutton.destroy()
+                self.radiobutton_list.remove(radiobutton)
+                return
+
+    def get_checked_item(self):
+        return self.radiobutton_variable.get()
+            
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
@@ -164,6 +141,13 @@ class App(customtkinter.CTk):
         self.scrollable_frame = customtkinter.CTkScrollableFrame(self, label_text="Connected Devices")
         self.scrollable_frame.grid(row=1, column=1, padx=(0, 0), pady=(0, 0), sticky="nsew")
         self.scrollable_frame.grid_columnconfigure(0, weight=10)
+        
+        #RADIO BUTTON FRAME
+        self.scrollable_radiobutton_frame = ScrollableRadiobuttonFrame(master=self, width=500, command=self.radiobutton_frame_event,
+                                                                       item_list=["bit","kbit","mbit","gbit"],
+                                                                       label_text="Arguments for limiting")
+        self.scrollable_radiobutton_frame.grid(row=1, column=3, padx=5, pady=5, sticky="ns")
+        self.scrollable_radiobutton_frame.configure(width=200)
 
         # Generate random data
         data = generate_data(10)
@@ -184,7 +168,10 @@ class App(customtkinter.CTk):
 
     def sidebar_button_event(self):
         print("sidebar_button click")
-    
+        
+   #RADIO BUTTON     
+    def radiobutton_frame_event(self):
+        print(f"radiobutton frame modified: {self.scrollable_radiobutton_frame.get_checked_item()}")
 
 if __name__ == "__main__":
     app = App()
