@@ -1,0 +1,40 @@
+
+# Site settings
+title: Proyecto Final
+description: 
+
+# Build settings
+markdown: kramdown
+theme: jekyll-theme-cayman
+
+# Navigation links
+nav:
+  - text: Home
+    url: /
+  - text: About
+    url: /about/
+  - text: Blog
+    url: /blog/
+  - text: Contact
+    url: /contact/
+
+# Plugins
+plugins:
+  - jekyll-sitemap
+
+# Exclude files and folders
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - _site
+  - .git
+  - .gitignore
+  - .sass-cache
+This config.yml file specifies the site title, description, base URL, and base hostname & protocol. It also sets the markdown engine to Kramdown and the theme to jekyll-theme-cayman.
+
+The navigation links are specified in the nav
+
+
+
