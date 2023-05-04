@@ -55,10 +55,8 @@ class Network():
         for i in hosts:
             host = []
             l = data[data.iloc[:,1]==bytes(nm[i]['addresses']['ipv4'],'utf-8')]
-
             if(len(l)==0):
                 continue
-
             host.append(l.iloc[:,0].to_numpy()[0])
             host.append(nm[i]['addresses']['ipv4'])
 
