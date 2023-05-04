@@ -24,8 +24,6 @@ def block_site(site):
     print(f"{site} has been blocked.")
 
 def unblock_site(site):
-    if not site.startswith("www."):
-    	site = "www."+site
     # Unblock the site
     with open(HOSTS_FILE, "r") as f:
         content = f.readlines()
