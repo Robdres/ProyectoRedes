@@ -8,9 +8,12 @@ import random
 import string
 from functools import partial
 
+
+
 customtkinter.set_appearance_mode("dark")
 #customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
+
 
 # Function to generate a random MAC address
 def random_mac_address():
@@ -27,9 +30,13 @@ def generate_data(n=10):
         data[_id] = (_id, name, mac_address, status)
     return data
 
+
+# Function to create buttons and bind actions
 def slider_value(value, labelSlider):
     labelSlider.configure(text=value)
 
+  
+# Function to create item container
 def create_item_container(parent, data, output_label):
     for i, item_id in enumerate(data):
         item_data = data[item_id]  # Get the item data using the item_id
@@ -62,6 +69,7 @@ def create_item_container(parent, data, output_label):
             #slider.configure(command=lambda value: slider_value(value, labelSlider)) /Previous Lambda not working for data requests
             slider.configure(command=lambda value, label=labelSlider: slider_value(value, label))
             
+            
 
 class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
     def __init__(self, master, item_list, command=None, **kwargs):
@@ -90,6 +98,10 @@ class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
     def get_checked_item(self):
         return self.radiobutton_variable.get()
             
+           
+       
+            
+
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
@@ -143,11 +155,27 @@ class App(customtkinter.CTk):
         self.scrollable_frame.grid_columnconfigure(0, weight=10)
         
         #RADIO BUTTON FRAME
+        
+        
         self.scrollable_radiobutton_frame = ScrollableRadiobuttonFrame(master=self, width=500, command=self.radiobutton_frame_event,
                                                                        item_list=["bit","kbit","mbit","gbit"],
                                                                        label_text="Arguments for limiting")
         self.scrollable_radiobutton_frame.grid(row=1, column=3, padx=5, pady=5, sticky="ns")
         self.scrollable_radiobutton_frame.configure(width=200)
+        
+        #Show blockled domains
+        self.button_blocked_domains = customtkinter.CTkButton(self.sidebar_frame, text="Show Blocked Domains",command =self.action_showButton)
+        self.button_blocked_domains.grid(row=3, column=0, padx=20, pady=10)
+        
+        
+        #Free button
+        self.button_free = customtkinter.CTkButton(self.sidebar_frame, text="Free")
+        self.button_free.grid(row=5, column=0, padx=20, pady=10)
+        
+        #TextBox Domain List
+        self.textbox = customtkinter.CTkTextbox(self.sidebar_frame, width=250)
+        self.textbox.grid(row=4, column=0, padx=(20, 0), pady=(20, 0), sticky="nsew")
+        
 
         # Generate random data
         data = generate_data(10)
@@ -172,6 +200,16 @@ class App(customtkinter.CTk):
    #RADIO BUTTON     
     def radiobutton_frame_event(self):
         print(f"radiobutton frame modified: {self.scrollable_radiobutton_frame.get_checked_item()}")
+        
+    def action_showButton(self):
+        self.textbox.insert("0.0", "List Blocked Domains\n\n" + "Obtener nombres de los dominios bloqueados\n\n")
+        
+        
+        
+    
+    
+    
+    
 
 if __name__ == "__main__":
     app = App()
