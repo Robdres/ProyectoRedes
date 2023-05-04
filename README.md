@@ -13,6 +13,7 @@ Para la interfaz gráfica se utilizó la librería de Python customTkinter. El o
 - Un textBox donde se muestran los dominios bloqueados.
 - Un botón "Free" para eliminar los dominios bloqueados.
 - Se añadieron funciones para cambiar el color de la interfaz y la escala.
+
 ![Side_Bar](https://user-images.githubusercontent.com/82112355/236125413-862190b6-5aa8-4924-935f-0b95f3df7911.jpg)
 
 aqui podemos ingresar un dominio como: "www.youtube.com", "www.netflix.com" para bloquear el acceso al sitio
