@@ -73,3 +73,12 @@ Utilizamos un primer **Diccionario** para la conversión de las escalas de veloc
 ## Funcion de la Clase para Bloquear a todos los hosts
 
 Similar a la función de limitar la red, tenemos nuestra clase Blocker, que recibe el ID del host que se busca bloquear. Y de igual manera usamos **thread.run()** para su ejecución.
+
+# Bloqueo de dominios
+
+Se implementa el script de blocker, el cual implementa funciones para bloquear un dominio al acceder a la red y para desbloquearlo de desearse. Para ello se aplican funciones en el script que editan el archivo hosts del dispositivo, anadiendo lineas de conexion hacia el mismo ordenador, fallando la conexion con el dominio establecido. En este caso, serian las lineas 127.0.0.1 seguidas del sitio web. 
+
+![Hosts result when sites are added](https://github.com/gapastorv/images/blob/main/Captura%20de%20pantalla%202023-05-04%20082921.png)
+
+Por otra parte, hay funciones para desbloquear las lineas de codigo, borrando las lineas del bloqueo y sus comentarios respectivos, que serviran como indicadores de ello.
+
